@@ -16,7 +16,7 @@ TEMPLATE = lib
 CONFIG += c++11 static
 QMAKE_CXXFLAGS += -std=c++11
 DEFINES += SMTP_BUILD
-win32:CONFIG += dll
+#win32:CONFIG += dll
 
 SOURCES += \
     src/emailaddress.cpp \
