@@ -13,7 +13,7 @@ TARGET = SMTPEmail
 
 # Build as a library
 TEMPLATE = lib
-CONFIG += c++11 static
+CONFIG += c++11
 QMAKE_CXXFLAGS += -std=c++11
 DEFINES += SMTP_BUILD
 #win32:CONFIG += dll
