@@ -200,11 +200,11 @@ bool SmtpClient::connectToHost()
     }
 
     // Tries to connect to server
-    if (!socket->waitForConnected(connectionTimeout))
-    {
-        emit smtpError(ConnectionTimeoutError);
-        return false;
-    }
+//    if (!socket->waitForConnected(connectionTimeout))
+//    {
+//        emit smtpError(ConnectionTimeoutError);
+//        return false;
+//    }
 
     try
     {
