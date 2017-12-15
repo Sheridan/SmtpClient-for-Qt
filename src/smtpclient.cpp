@@ -90,11 +90,13 @@ void SmtpClient::setConnectionType(ConnectionType ct)
     switch (connectionType)
     {
     case TcpConnection:
-        socket = new QTcpSocket(this);
+        socket = new QTcpSocket();
         break;
     case SslConnection:
     case TlsConnection:
-        socket = new QSslSocket(this);
+        socket = new QSslSocket();
+        connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
+        break;
     }
 }
 
@@ -195,7 +197,6 @@ bool SmtpClient::connectToHost()
         break;
     case SslConnection:
         ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
-        connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
         break;
 
     }
