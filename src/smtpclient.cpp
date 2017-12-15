@@ -195,6 +195,7 @@ bool SmtpClient::connectToHost()
         break;
     case SslConnection:
         ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
+        connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
         break;
 
     }
@@ -493,6 +494,16 @@ void SmtpClient::socketError(QAbstractSocket::SocketError /*socketError*/)
 
 void SmtpClient::socketReadyRead()
 {
+}
+
+void SmtpClient::onSslError(QList<QSslError> errors)
+{
+    for(QSslError e: errors)
+    {
+        qDebug() << "SMTP Server SSL Error: " << e.errorString();
+    }
+    ((QSslSocket*) socket)->ignoreSslErrors();
+
 }
 
 /* [5] --- */

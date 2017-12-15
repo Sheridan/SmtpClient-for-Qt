@@ -167,6 +167,7 @@ protected slots:
     void socketStateChanged(QAbstractSocket::SocketState state);
     void socketError(QAbstractSocket::SocketError error);
     void socketReadyRead();
+    void onSslError(QList<QSslError> errors);
 
     /* [6] --- */
 
