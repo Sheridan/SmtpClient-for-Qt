@@ -23,7 +23,7 @@
 #include <QSslConfiguration>
 #include <QSslCipher>
 
-#define SMTP_DEBUG
+//#define SMTP_DEBUG
 
 /* [1] Constructors and destructors */
 
