@@ -21,7 +21,9 @@
 #include <QFileInfo>
 #include <QByteArray>
 #include <QSslConfiguration>
+#include <QSslCipher>
 
+#define SMTP_DEBUG
 
 /* [1] Constructors and destructors */
 
@@ -98,6 +100,12 @@ void SmtpClient::setConnectionType(ConnectionType ct)
 //            QSslConfiguration conf = ((QSslSocket*) socket)->sslConfiguration();
 //            conf.setPeerVerifyMode(QSslSocket::VerifyNone);
 //            ((QSslSocket*) socket)->setSslConfiguration(conf);
+            #ifdef SMTP_DEBUG
+            for (QSslCipher ch: ((QSslSocket*) socket)->sslConfiguration().supportedCiphers())
+            {
+                qDebug() << ch.name();
+            }
+            #endif
             break;
         }
     }
@@ -199,7 +207,15 @@ bool SmtpClient::connectToHost()
         socket->connectToHost(host, port);
         break;
     case SslConnection:
-        ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
+        {
+            ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
+            #ifdef SMTP_DEBUG
+            for (QSslCipher ch: ((QSslSocket*) socket)->sslConfiguration().ciphers())
+            {
+                qDebug() << ch.name();
+            }
+            #endif
+        }
         break;
 
     }
