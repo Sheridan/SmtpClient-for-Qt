@@ -191,11 +191,12 @@ bool SmtpClient::connectToHost()
 {
     switch (connectionType)
     {
-    case TlsConnection:
+
     case TcpConnection:
         socket->connectToHost(host, port);
         break;
     case SslConnection:
+    case TlsConnection:
         ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
         break;
 
@@ -247,13 +248,13 @@ bool SmtpClient::connectToHost()
                 return false;
             };
 
-            ((QSslSocket*) socket)->startClientEncryption();
+//            ((QSslSocket*) socket)->startClientEncryption();
 
-            if (!((QSslSocket*) socket)->waitForEncrypted(connectionTimeout)) {
-                qDebug() << ((QSslSocket*) socket)->errorString();
-                emit smtpError(ConnectionTimeoutError);
-                return false;
-            }
+//            if (!((QSslSocket*) socket)->waitForEncrypted(connectionTimeout)) {
+//                qDebug() << ((QSslSocket*) socket)->errorString();
+//                emit smtpError(ConnectionTimeoutError);
+//                return false;
+//            }
 
             // Send ELHO one more time
             sendMessage("EHLO " + name);
