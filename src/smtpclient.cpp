@@ -103,7 +103,7 @@ void SmtpClient::setConnectionType(ConnectionType ct)
             #ifdef SMTP_DEBUG
             for (QSslCipher ch: ((QSslSocket*) socket)->sslConfiguration().supportedCiphers())
             {
-                qDebug() << ch.name();
+                qDebug() << "Supported cipher: " << ch.name();
             }
             #endif
             break;
@@ -202,22 +202,17 @@ bool SmtpClient::connectToHost()
 {
     switch (connectionType)
     {
-    case TlsConnection:
-    case TcpConnection:
-        socket->connectToHost(host, port);
-        break;
-    case SslConnection:
+        case TlsConnection:
+        case TcpConnection:
+        {
+            socket->connectToHost(host, port);
+            break;
+        }
+        case SslConnection:
         {
             ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
-            #ifdef SMTP_DEBUG
-            for (QSslCipher ch: ((QSslSocket*) socket)->sslConfiguration().ciphers())
-            {
-                qDebug() << ch.name();
-            }
-            #endif
         }
         break;
-
     }
 
     // Tries to connect to server
@@ -231,6 +226,24 @@ bool SmtpClient::connectToHost()
     {
         // Wait for the server's response
         waitForResponse();
+
+        #ifdef SMTP_DEBUG
+            //            for (QSslCipher ch: ((QSslSocket*) socket)->sslConfiguration().ciphers())
+            //            {
+            //                qDebug() << "Used cipher: " << ch.name();
+            //            }
+            qDebug() << "Used SSL Protocol: " << ((QSslSocket*) socket)->sslConfiguration().protocol();
+            qDebug() << "Setificate: " << ((QSslSocket*) socket)->sslConfiguration().peerCertificate().toText();
+
+            qDebug() << "Used SSL session cipher: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().name();
+            qDebug() << "Authentication: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().authenticationMethod();
+            qDebug() << "Encryption: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().encryptionMethod();
+            qDebug() << "Key Exchange: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().keyExchangeMethod();
+            qDebug() << "Cipher Name: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().name();
+            qDebug() << "Protocol: " <<  ((QSslSocket*) socket)->sslConfiguration().sessionCipher().protocolString();
+            qDebug() << "Supported Bits: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().supportedBits();
+            qDebug() << "Used Bits: " << ((QSslSocket*) socket)->sslConfiguration().sessionCipher().usedBits();
+        #endif
 
         // If the response code is not 220 (Service ready)
         // means that is something wrong with the server
