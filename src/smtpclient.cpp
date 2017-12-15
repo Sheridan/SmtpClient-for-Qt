@@ -95,9 +95,9 @@ void SmtpClient::setConnectionType(ConnectionType ct)
         {
             socket = new QSslSocket();
             connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
-            QSslConfiguration conf = ((QSslSocket*) socket)->sslConfiguration();
-            conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-            ((QSslSocket*) socket)->setSslConfiguration(conf);
+//            QSslConfiguration conf = ((QSslSocket*) socket)->sslConfiguration();
+//            conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+//            ((QSslSocket*) socket)->setSslConfiguration(conf);
             break;
         }
     }
