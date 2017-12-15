@@ -440,6 +440,7 @@ void SmtpClient::quit()
 
 void SmtpClient::waitForResponse()
 {
+    qDebug() << "Waiting for reply from smtp server";
     do {
         if (!socket->waitForReadyRead(responseTimeout))
         {
@@ -450,6 +451,7 @@ void SmtpClient::waitForResponse()
         while (socket->canReadLine()) {
             // Save the server's response
             responseText = socket->readLine();
+            qDebug() << "Reply from SMTP server: " << responseText;
 
             // Extract the respose code from the server's responce (first 3 digits)
             responseCode = responseText.left(3).toInt();
@@ -467,6 +469,7 @@ void SmtpClient::waitForResponse()
 
 void SmtpClient::sendMessage(const QString &text)
 {
+    qDebug() << "Sending message to smtp server: " << text;
     socket->write(text.toUtf8() + "\r\n");
     if (! socket->waitForBytesWritten(sendMessageTimeout))
     {
