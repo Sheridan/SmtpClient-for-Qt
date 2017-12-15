@@ -20,6 +20,7 @@
 
 #include <QFileInfo>
 #include <QByteArray>
+#include <QSslConfiguration>
 
 
 /* [1] Constructors and destructors */
@@ -37,12 +38,9 @@ SmtpClient::SmtpClient(const QString & host, int port, ConnectionType connection
     this->host = host;
     this->port = port;
 
-    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-            this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
-    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(socketError(QAbstractSocket::SocketError)));
-    connect(socket, SIGNAL(readyRead()),
-            this, SLOT(socketReadyRead()));
+    connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(socketStateChanged(QAbstractSocket::SocketState)));
+    connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(socketError(QAbstractSocket::SocketError)));
+    connect(socket, SIGNAL(readyRead()), this, SLOT(socketReadyRead()));
 }
 
 SmtpClient::~SmtpClient() {
@@ -94,9 +92,14 @@ void SmtpClient::setConnectionType(ConnectionType ct)
         break;
     case SslConnection:
     case TlsConnection:
-        socket = new QSslSocket();
-        connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
-        break;
+        {
+            socket = new QSslSocket();
+            connect(socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslError(QList<QSslError>)));
+            QSslConfiguration conf = ((QSslSocket*) socket)->sslConfiguration();
+            conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+            ((QSslSocket*) socket)->setSslConfiguration(conf);
+            break;
+        }
     }
 }
 
@@ -191,12 +194,11 @@ bool SmtpClient::connectToHost()
 {
     switch (connectionType)
     {
-
+    case TlsConnection:
     case TcpConnection:
         socket->connectToHost(host, port);
         break;
     case SslConnection:
-    case TlsConnection:
         ((QSslSocket*) socket)->connectToHostEncrypted(host, port);
         break;
 
@@ -248,13 +250,13 @@ bool SmtpClient::connectToHost()
                 return false;
             };
 
-//            ((QSslSocket*) socket)->startClientEncryption();
+            ((QSslSocket*) socket)->startClientEncryption();
 
-//            if (!((QSslSocket*) socket)->waitForEncrypted(connectionTimeout)) {
-//                qDebug() << ((QSslSocket*) socket)->errorString();
-//                emit smtpError(ConnectionTimeoutError);
-//                return false;
-//            }
+            if (!((QSslSocket*) socket)->waitForEncrypted(connectionTimeout)) {
+                qDebug() << ((QSslSocket*) socket)->errorString();
+                emit smtpError(ConnectionTimeoutError);
+                return false;
+            }
 
             // Send ELHO one more time
             sendMessage("EHLO " + name);
@@ -486,12 +488,14 @@ void SmtpClient::sendMessage(const QString &text)
 
 /* [5] Slots for the socket's signals */
 
-void SmtpClient::socketStateChanged(QAbstractSocket::SocketState /*state*/)
+void SmtpClient::socketStateChanged(QAbstractSocket::SocketState state)
 {
+    qDebug() << "SMTP socket state: " << state;
 }
 
-void SmtpClient::socketError(QAbstractSocket::SocketError /*socketError*/)
+void SmtpClient::socketError(QAbstractSocket::SocketError error)
 {
+    qDebug() << "SMTP socket error: " << error;
 }
 
 void SmtpClient::socketReadyRead()
@@ -500,11 +504,19 @@ void SmtpClient::socketReadyRead()
 
 void SmtpClient::onSslError(QList<QSslError> errors)
 {
-    for(QSslError e: errors)
+    QSslError ignoreNOErrors(QSslError::NoError);
+
+    foreach(QSslError error, errors)
     {
-        qDebug() << "SMTP Server SSL Error: " << e.errorString();
+        if(error.error() != QSslError::NoError)
+        {
+            qDebug() << "SMTP Server SSL Error: " << error.errorString();
+        }
     }
-    ((QSslSocket*) socket)->ignoreSslErrors();
+
+    QList<QSslError> expectedSslErrors;
+    expectedSslErrors.append(ignoreNOErrors);
+    ((QSslSocket*) socket)->ignoreSslErrors(expectedSslErrors);
 
 }
 
