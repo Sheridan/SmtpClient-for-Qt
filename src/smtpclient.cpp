@@ -246,6 +246,7 @@ bool SmtpClient::connectToHost()
         if (responseCode != 220)
         {
             emit smtpError(ServerError);
+            qDebug() << "Wrong response code: " << responseText << " -> " << ((QSslSocket*) socket)->errorString();
             return false;
         }
 
@@ -259,6 +260,7 @@ bool SmtpClient::connectToHost()
         // The response code needs to be 250.
         if (responseCode != 250) {
             emit smtpError(ServerError);
+            qDebug() << "Wrong response code: " << responseText << " -> " << ((QSslSocket*) socket)->errorString();
             return false;
         }
 
@@ -272,13 +274,14 @@ bool SmtpClient::connectToHost()
             // The response code needs to be 220.
             if (responseCode != 220) {
                 emit smtpError(ServerError);
+                qDebug() << "Wrong response code: " << responseText << " -> " << ((QSslSocket*) socket)->errorString();
                 return false;
             };
 
             ((QSslSocket*) socket)->startClientEncryption();
 
             if (!((QSslSocket*) socket)->waitForEncrypted(connectionTimeout)) {
-                qDebug() << ((QSslSocket*) socket)->errorString();
+                qDebug() << "startClientEncryption tumeout: " << ((QSslSocket*) socket)->errorString();
                 emit smtpError(ConnectionTimeoutError);
                 return false;
             }
@@ -292,6 +295,7 @@ bool SmtpClient::connectToHost()
             // The response code needs to be 250.
             if (responseCode != 250) {
                 emit smtpError(ServerError);
+                qDebug() << "Wrong response code: " << responseText << " -> " << ((QSslSocket*) socket)->errorString();
                 return false;
             }
         }
@@ -366,12 +370,14 @@ bool SmtpClient::login(const QString &user, const QString &password, AuthMethod 
     {
         // Responce Timeout exceeded
         emit smtpError(AuthenticationFailedError);
+        qDebug() << "Response timeout: " << ((QSslSocket*) socket)->errorString();
         return false;
     }
     catch (SendMessageTimeoutException)
     {
 	// Send Timeout exceeded
         emit smtpError(AuthenticationFailedError);
+        qDebug() << "Send timeout: " << ((QSslSocket*) socket)->errorString();
         return false;
     }
 
@@ -470,7 +476,9 @@ void SmtpClient::quit()
 
 void SmtpClient::waitForResponse()
 {
-    qDebug() << "Waiting for reply from smtp server";
+    #ifdef SMTP_DEBUG
+        qDebug() << "Waiting for reply from smtp server";
+    #endif
     do {
         if (!socket->waitForReadyRead(responseTimeout))
         {
@@ -481,7 +489,9 @@ void SmtpClient::waitForResponse()
         while (socket->canReadLine()) {
             // Save the server's response
             responseText = socket->readLine();
-            qDebug() << "Reply from SMTP server: " << responseText;
+            #ifdef SMTP_DEBUG
+                qDebug() << "Reply from SMTP server: " << responseText;
+            #endif
 
             // Extract the respose code from the server's responce (first 3 digits)
             responseCode = responseText.left(3).toInt();
@@ -499,7 +509,9 @@ void SmtpClient::waitForResponse()
 
 void SmtpClient::sendMessage(const QString &text)
 {
-    qDebug() << "Sending message to smtp server: " << text;
+    #ifdef SMTP_DEBUG
+        qDebug() << "Sending message to smtp server: " << text;
+    #endif
     socket->write(text.toUtf8() + "\r\n");
     if (! socket->waitForBytesWritten(sendMessageTimeout))
     {
@@ -515,7 +527,9 @@ void SmtpClient::sendMessage(const QString &text)
 
 void SmtpClient::socketStateChanged(QAbstractSocket::SocketState state)
 {
-    qDebug() << "SMTP socket state: " << state;
+    #ifdef SMTP_DEBUG
+        qDebug() << "SMTP socket state: " << state;
+    #endif
 }
 
 void SmtpClient::socketError(QAbstractSocket::SocketError error)
